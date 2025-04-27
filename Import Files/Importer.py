@@ -61,7 +61,6 @@ def get_activities(token:str, client_id:str, client_secret:str, refresh_token:st
             raise e
 
     # If successful
-    print(activities.json())  # Assuming you want the JSON response
     return activities.json(),token
 
 def filter_by_virtual(activities:json,previous_activities=None)->list:
@@ -107,50 +106,55 @@ def get_activity(activity_id: int, location: str, token: str) -> None:
 
     print(f"✅ Activity {activity_id} downloaded and saved to {filename}.")
 
-def download_gpx(activity_id: int, location: str, token: str) -> None:
-    """Download a Strava activity as a GPX file if it doesn't already exist."""
+def download_streams(activity_id: int, location: str, token: str) -> None:
+    """Download a Strava activity streams (HR, cadence, power) as a JSON file if it doesn't already exist."""
 
     # Ensure the directory exists
     os.makedirs(location, exist_ok=True)
 
     # Build filename
-    filename = os.path.join(location, f"{activity_id}.gpx")
+    filename = os.path.join(location, f"{activity_id}.json")
 
     # Check if the file already exists
     if os.path.exists(filename):
-        print(f"GPX for activity {activity_id} already exists at {filename}.")
+        print(f"Streams for activity {activity_id} already exist at {filename}.")
         return
 
     # Build request
-    url = f"https://www.strava.com/api/v3/activities/{activity_id}/export_gpx"
+    url = f"https://www.strava.com/api/v3/activities/{activity_id}/streams"
+    params = {
+        "keys": "time,heartrate,cadence,watts",
+        "key_by_type": "true"
+    }
     headers = {
         "Authorization": f"Bearer {token}"
     }
 
-    response = requests.get(url, headers=headers)
+    response = requests.get(url, headers=headers, params=params)
 
     try:
         response.raise_for_status()
     except requests.exceptions.HTTPError as e:
-        print(f"Failed to fetch GPX for activity {activity_id}: {e}")
+        print(f"Failed to fetch streams for activity {activity_id}: {e}")
         return
 
-    # Save the GPX file
-    with open(filename, "wb") as f:
-        f.write(response.content)
+    # Save the JSON file
+    with open(filename, "w") as file:
+        json.dump(response.json(), file, indent=2)
 
-    print(f"✅ GPX for activity {activity_id} downloaded and saved to {filename}.")
+    print(f"✅ Streams for activity {activity_id} downloaded and saved to {filename}.")
+    
     
 if __name__ == '__main__':
     client_id = "53436"
-    code = "90f240441b713c31cbd60fd58842a0375a560e0e"  # Replace with the code you copied!
     token = 'fef948654a5cd2f4de6082cce60013ccc2a7f38a'
-
-    client_id = "53436"
     client_secret = "7cb942d9f4ee69e11b3268f08219d5893e84425f"
     refresh_token = "3bd80c0a333776af6fc093768cac257533ac62cf"
-    activities,token=get_activities(token, client_id, client_secret, refresh_token,amount=100,page=1)
-    indoor_rides=filter_by_virtual(activities)
+    for i in range(30):
+        activities,token=get_activities(token, client_id, client_secret, refresh_token,amount=50,page=i+1)
+        indoor_rides=filter_by_virtual(activities)
+        
+        
     print(indoor_rides)
-    download_gpx(indoor_rides[0],"TrainingFiles",token)
-    
+    for ride in indoor_rides:
+        download_streams(ride,"TrainingFiles",token)
