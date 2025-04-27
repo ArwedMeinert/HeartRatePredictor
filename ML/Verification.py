@@ -58,17 +58,17 @@ class SimulateActivity:
                 self.np = self.np**0.25
             
             if self.elapsed_time<10:
-                self.gradient10=power-self.last10[0]
-                self.gradient30=power-self.last10[0]
+                self.gradient10=power-self.last30s_power[0]
+                self.gradient30=power-self.last30s_power[0]
             elif self.elapsed_time<30:
-                self.gradient10=power-self.last10[-10]
-                self.gradient30=power-self.last10[0]
+                self.gradient10=power-self.last30s_power[-10]
+                self.gradient30=power-self.last30s_power[0]
             else:
-                self.gradient10=power-self.last10[-10]
-                self.gradient30=power-self.last10[-30]
+                self.gradient10=power-self.last30s_power[-10]
+                self.gradient30=power-self.last30s_power[-30]
             
             # Prepare input for model (current power, cadence, and averages)
-            input_features = list(self.last30s_power) + list(self.last30s_cadence)[-30:] + list(self.averages.values())+[self.elapsed_time]+[self.np]
+            input_features = list(self.last30s_power) + list(self.last30s_cadence)[-30:] + list(self.averages.values())+[self.elapsed_time]+[self.np]+[self.gradient10,self.gradient30]
 
             # Convert to tensor and predict
             x_input = torch.tensor(input_features, dtype=torch.float32).unsqueeze(0)  # Add batch dimension
@@ -93,7 +93,15 @@ class SimulateActivity:
 
 if __name__ == '__main__':
     # Load your trained model
-    model = NeuralNetworkTraining.HRPredictor()  # Replace HRPredictor with your actual model class
+    with open('model_parameters.json', 'r') as f:
+        params = json.load(f)
+
+    # Extract needed parameters
+    hidden_sizes = params["layers"]
+    input_size = 68  # You know your input size already (can also save it in JSON if needed)
+
+    # Build model with loaded parameters
+    model = NeuralNetworkTraining.HRPredictor(input_size=input_size, hidden_sizes=hidden_sizes)
     model.load_state_dict(torch.load('model.pth'))
     model.eval()  # Set model to evaluation mode
     
