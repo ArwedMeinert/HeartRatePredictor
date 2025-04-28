@@ -1,10 +1,10 @@
 {
     "layers": [
-        252,
+        502,
         64
     ],
     "learning_rate": 0.01648939775763011,
     "step_size": 40,
     "gamma": 0.98,
-    "validation_loss": 100.72224426269531
+    "validation_loss": 76.00542449951172
 }

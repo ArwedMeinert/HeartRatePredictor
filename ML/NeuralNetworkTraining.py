@@ -99,13 +99,13 @@ if __name__ == '__main__':
     best_loss_global = float('inf')
     iteration=1
     X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.25)
-    nodes,lr,step_size,gamma=[252,64],0.01648939775763011,40,0.98#0.896597855185665#generate_parameters()
+    nodes,lr,step_size,gamma=[502,64],0.01648939775763011,40,0.98#0.896597855185665#generate_parameters()
     model = HRPredictor(input_size=68,hidden_sizes=nodes)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=step_size, gamma=gamma)
     loss_fn = nn.MSELoss()  # Mean Squared Error
 
-    epochs = 3000
+    epochs = 10000
         
     patience = 60  # Stop if validation loss doesn't improve for 10 epochs
     no_improvement_counter = 0
