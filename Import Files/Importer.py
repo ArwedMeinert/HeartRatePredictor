@@ -2,11 +2,6 @@ import requests
 import os
 import json
 
-REDIRECT_URI = "http://localhost/exchange_token"  # You can use anything, but must match app settings!
-
-# Scope needed: activity:read_all to access all activities
-SCOPE = "activity:read_all"
-
 
 def get_refresh_token(clientID:str, clientSecret:str, refreshToken:str):
     response = requests.post(
