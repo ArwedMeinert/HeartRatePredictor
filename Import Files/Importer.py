@@ -104,7 +104,7 @@ def get_activity(activity_id: int, location: str, token: str) -> None:
     with open(filename, "w", encoding="utf-8") as f:
         json.dump(response.json(), f, indent=4)
 
-    print(f"✅ Activity {activity_id} downloaded and saved to {filename}.")
+    print(f" Activity {activity_id} downloaded and saved to {filename}.")
 
 def download_streams(activity_id: int, location: str, token: str) -> None:
     """Download a Strava activity streams (HR, cadence, power) as a JSON file if it doesn't already exist."""

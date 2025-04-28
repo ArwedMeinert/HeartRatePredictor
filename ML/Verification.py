@@ -131,7 +131,7 @@ if __name__ == '__main__':
     training, verification, testing = TrainingData.create_datasets("TrainingFiles", 100, 0, 0)
     
     # Select an activity from the dataset (e.g., first training file)
-    with open(training[13], "r") as file:
+    with open(training[5], "r") as file:
         data = json.load(file)
         length_activity = data["watts"]["original_size"]
         
