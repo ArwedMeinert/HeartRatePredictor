@@ -146,11 +146,11 @@ def download_streams(activity_id: int, location: str, token: str) -> None:
     
     
 if __name__ == '__main__':
-    client_id = "53436"
-    token = 'fef948654a5cd2f4de6082cce60013ccc2a7f38a'
-    client_secret = "7cb942d9f4ee69e11b3268f08219d5893e84425f"
-    refresh_token = "3bd80c0a333776af6fc093768cac257533ac62cf"
-    for i in range(30):
+    client_id = "CLIENTID"
+    token = 'TOKEN'
+    client_secret = "CLIENT_SECRET"
+    refresh_token = "REFRESH_TOKEN"
+    for i in range(3):
         activities,token=get_activities(token, client_id, client_secret, refresh_token,amount=50,page=i+1)
         indoor_rides=filter_by_virtual(activities)
         

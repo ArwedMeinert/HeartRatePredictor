@@ -1,10 +1,11 @@
 {
     "layers": [
+        256,
         128,
         64
     ],
     "learning_rate": 0.01648939775763011,
     "step_size": 26,
-    "gamma": 0.98,
-    "validation_loss": 177.64077758789062
+    "gamma": 0.896597855185665,
+    "validation_loss": 137.2288360595703
 }

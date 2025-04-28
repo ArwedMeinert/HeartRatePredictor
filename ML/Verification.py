@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import torch
 from collections import deque
 import NeuralNetworkTraining
+import numpy as np
 
 # Assuming your trained model is saved as 'model.pth'
 class SimulateActivity:
@@ -23,6 +24,7 @@ class SimulateActivity:
         self.elapsed_time=0
         self.predicted_hr = []
         self.real_hr = []
+        self.power_history=[]
         self.gradient10=0
         self.gradient30=0
 
@@ -78,22 +80,42 @@ class SimulateActivity:
             # Store real and predicted heart rate
             self.real_hr.append(heart_rate)
             self.predicted_hr.append(predicted_hr)
-
+            self.power_history.append(power)
+            
         self.plot_results()
 
     def plot_results(self):
-        plt.figure(figsize=(12, 6))
-        plt.plot(self.real_hr, label="Real Heart Rate", color='blue')
-        plt.plot(self.predicted_hr, label="Predicted Heart Rate", color='red', linestyle='--')
-        plt.xlabel("Time (seconds)")
-        plt.ylabel("Heart Rate (bpm)")
-        plt.title("Real vs Predicted Heart Rate")
-        plt.legend()
+        fig, ax1 = plt.subplots(figsize=(12, 6))
+
+        # First axis: Heart rates
+        ax1.plot(self.real_hr, label="Real Heart Rate", color='blue')
+        ax1.plot(self.predicted_hr, label="Predicted Heart Rate", color='red', linestyle='--')
+        ax1.set_xlabel("Time (seconds)")
+        ax1.set_ylabel("Heart Rate (bpm)", color='blue')
+        ax1.tick_params(axis='y', labelcolor='blue')
+
+        # Apply 3-second moving average to power
+        power_array = np.array(self.power_history)
+        power_smoothed = np.convolve(power_array, np.ones(5)/5, mode='same')  # 3-sample moving average
+
+        # Second axis: Smoothed Power
+        ax2 = ax1.twinx()
+        ax2.plot(power_smoothed, label="Power (5s avg)", color='green', alpha=0.5)
+        ax2.set_ylabel("Power (watts)", color='green')
+        ax2.tick_params(axis='y', labelcolor='green')
+
+        # Title and combined legend
+        fig.suptitle("Real vs Predicted Heart Rate and Power (3s Avg)")
+        ax1.legend(loc="upper left")
+        ax2.legend(loc="upper right")
+
         plt.show()
+
+
 
 if __name__ == '__main__':
     # Load your trained model
-    with open('model_parameters.json', 'r') as f:
+    with open('model_parametersnew.json', 'r') as f:
         params = json.load(f)
 
     # Extract needed parameters
@@ -102,14 +124,14 @@ if __name__ == '__main__':
 
     # Build model with loaded parameters
     model = NeuralNetworkTraining.HRPredictor(input_size=input_size, hidden_sizes=hidden_sizes)
-    model.load_state_dict(torch.load('model.pth'))
+    model.load_state_dict(torch.load('modelnew.pth'))
     model.eval()  # Set model to evaluation mode
     
     # Create dataset
-    training, verification, testing = TrainingData.create_datasets("TrainingFiles", 70, 20, 10)
+    training, verification, testing = TrainingData.create_datasets("TrainingFiles", 100, 0, 0)
     
     # Select an activity from the dataset (e.g., first training file)
-    with open(verification[1], "r") as file:
+    with open(training[13], "r") as file:
         data = json.load(file)
         length_activity = data["watts"]["original_size"]
         

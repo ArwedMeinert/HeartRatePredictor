@@ -37,7 +37,17 @@ class HRPredictor(nn.Module):
     def forward(self, x):
         return self.model(x)
 
-    
+def generate_parameters():
+    layers=int(random.triangular(2,6,3))
+    nodes=[]
+    for layer in range(layers):
+        nodes.append(2**(layer+6))
+    nodes.reverse()
+    print(nodes)
+    lr=random.triangular(0.001,0.02,0.01)
+    step_size=int(random.triangular(4,40,20))
+    gamma=random.triangular(0.05,1,0.8)
+    return nodes,lr,step_size,gamma
     
 if __name__ == '__main__':
     X_data = []
@@ -88,69 +98,59 @@ if __name__ == '__main__':
     # Initialize model, optimizer, and loss function
     best_loss_global = float('inf')
     iteration=1
-    while best_loss_global>100:
-        X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.25)
-        layers=int(random.triangular(2,6,3))
-        nodes=[]
-        for layer in range(layers):
-            nodes.append(2**(layer+6))
-        nodes.reverse()
-        print(nodes)
-        lr=random.triangular(0.001,0.02,0.01)
-        step_size=int(random.triangular(4,40,20))
-        gamma=random.triangular(0.05,1,0.8)
-        model = HRPredictor(input_size=68,hidden_sizes=nodes)
-        optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=15, gamma=gamma)
-        loss_fn = nn.MSELoss()  # Mean Squared Error
+    X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.25)
+    nodes,lr,step_size,gamma=[256,128,64],0.01648939775763011,26,0.896597855185665#generate_parameters()
+    model = HRPredictor(input_size=68,hidden_sizes=nodes)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=step_size, gamma=gamma)
+    loss_fn = nn.MSELoss()  # Mean Squared Error
 
-        epochs = 2
+    epochs = 2200
         
-        patience = 20  # Stop if validation loss doesn't improve for 10 epochs
-        no_improvement_counter = 0
+    patience = 60  # Stop if validation loss doesn't improve for 10 epochs
+    no_improvement_counter = 0
         
-        best_loss=float('inf')
-        for epoch in range(epochs):
-            model.train()
-            optimizer.zero_grad()
+    best_loss=float('inf')
+    for epoch in range(epochs):
+        model.train()
+        optimizer.zero_grad()
 
-            # Training step
-            y_pred_train = model(X_train)
-            train_loss = loss_fn(y_pred_train, y_train)
+        # Training step
+        y_pred_train = model(X_train)
+        train_loss = loss_fn(y_pred_train, y_train)
 
-            train_loss.backward()
-            optimizer.step()
-            scheduler.step()
+        train_loss.backward()
+        optimizer.step()
+        scheduler.step()
 
-            # Validation step
-            model.eval()  # Set model to evaluation mode
-            with torch.no_grad():
-                y_pred_val = model(X_val)
-                val_loss = loss_fn(y_pred_val, y_val)
+        # Validation step
+        model.eval()  # Set model to evaluation mode
+        with torch.no_grad():
+            y_pred_val = model(X_val)
+            val_loss = loss_fn(y_pred_val, y_val)
 
-            # Early stopping logic
-            if val_loss < best_loss:
-                best_loss = val_loss
-                no_improvement_counter = 0
-                best_mode_state=model.state_dict()
-            else:
-                no_improvement_counter += 1
+        # Early stopping logic
+        if val_loss < best_loss:
+            best_loss = val_loss
+            no_improvement_counter = 0
+            best_mode_state=model.state_dict()
+        else:
+            no_improvement_counter += 1
 
-            if no_improvement_counter >= patience or  (epoch>40 and best_loss>2000) or (epoch>100 and best_loss>1000):
-                print("Early stopping: No improvement in validation loss.")
-                break
+        if no_improvement_counter >= patience or  (epoch>40 and best_loss>2000) or (epoch>100 and best_loss>1000):
+            print("Early stopping: No improvement in validation loss.")
+            break
 
-            # Print progress
-            print(f"Epoch {epoch+1}/{epochs}, Training Loss: {train_loss.item()}, Validation Loss: {val_loss.item()}")
+        # Print progress
+        print(f"Epoch {epoch+1}/{epochs}, Training Loss: {train_loss.item()}, Validation Loss: {val_loss.item()}")
 
-        # Save the model after training
-        print(iteration)
-        iteration+=1
-        if best_loss < best_loss_global:
-            best_loss_global = best_loss
-            torch.save(best_mode_state, "model.pth")
+    # Save the model after training
+    print(iteration)
+    iteration+=1
+    best_loss_global = best_loss
+    torch.save(best_mode_state, "modelnew.pth")
             
-            parameters = {
+    parameters = {
                 "layers": nodes,
                 "learning_rate": lr,
                 "step_size": step_size,
@@ -158,7 +158,7 @@ if __name__ == '__main__':
                 "validation_loss": best_loss.item()
             }
             
-            with open("model_parameters.json", "w") as f:
-                json.dump(parameters, f, indent=4)
+    with open("model_parametersnew.json", "w") as f:
+        json.dump(parameters, f, indent=4)
             
-            print(f"A new model has been saved with layers: {nodes}, lr: {lr:.6f}, step_size: {step_size}, gamma: {gamma:.6f}. Validation loss: {best_loss:.6f}")
+    print(f"A new model has been saved with layers: {nodes}, lr: {lr:.6f}, step_size: {step_size}, gamma: {gamma:.6f}. Validation loss: {best_loss:.6f}")
